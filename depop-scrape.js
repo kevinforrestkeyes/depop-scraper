@@ -28,17 +28,26 @@ const getBlurb = async id => {
 				.click('li:nth-child('+i+') [data-css-rabfxd]')
 				.wait('.css-1ski12 span')
 				.evaluate(() => {
+					let blurb = [];
+					let fields = [];
 					if(document.querySelectorAll('.css-1ski12 span span').length > 0) {
-						return [...document.querySelectorAll('.css-1ski12 span span')]
+						blurb = [...document.querySelectorAll('.css-1ski12 span span')]
 							.map(el => el.innerText);
 					} else {
-						return [...document.querySelectorAll('.css-1ski12 span')]
+						blurb = [...document.querySelectorAll('.css-1ski12 span')]
 							.map(el => el.innerText);
 					}
+					fields = [...document.querySelectorAll('.css-un4s3n span')]
+						.map(el => el.innerText);
+					values = [...document.querySelectorAll('.css-syjz65')]
+						.map(el => el.innerText);
+					return {blurb: blurb.map(line => line.replace('\n','').trim()).filter(line => line !== ''),
+							fields: fields,
+							values: values}
 				})
 				.then();
-			let result_refined = result.map(line => line.replace('\n','').trim()).filter(line => line !== '');
-			console.log(result_refined);
+			// let result_refined = result.map(line => line.replace('\n','').trim()).filter(line => line !== '');
+			console.log(result);
 		} catch(e) {
 			console.log(e);
 			i--;
