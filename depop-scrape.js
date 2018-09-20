@@ -26,27 +26,19 @@ const getBlurb = async id => {
 		try {
 			const result = await nightmare
 				.click('li:nth-child('+i+') [data-css-rabfxd]')
-				.wait('.css-1ski12 span span')
+				.wait('.css-1ski12 span')
 				.evaluate(() => {
-					let result_value = [];
-					result_value = document.querySelectorAll('.css-1ski12 span').length;
 					if(document.querySelectorAll('.css-1ski12 span span').length > 0) {
-						// return [...document.querySelectorAll('.css-1ski12 span span')]
-							// .map(el => el.innerText);
-						// result_value = "what";
+						return [...document.querySelectorAll('.css-1ski12 span span')]
+							.map(el => el.innerText);
 					} else {
-						// result_value = "who";
-						// return [...document.querySelectorAll('.css-1ski12 span')]
-						// 	.map(el => el.innerText);
-						// return [];
+						return [...document.querySelectorAll('.css-1ski12 span')]
+							.map(el => el.innerText);
 					}
-					return result_value;
 				})
 				.then();
-			console.log(result);
-			// let result_refined = result.map(line => line.replace('\n','').trim()).filter(line => line !== '');
-			// console.log(result_refined);
-			// return {result_refined};
+			let result_refined = result.map(line => line.replace('\n','').trim()).filter(line => line !== '');
+			console.log(result_refined);
 		} catch(e) {
 			console.log(e);
 			i--;
