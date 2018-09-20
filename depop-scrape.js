@@ -1,6 +1,6 @@
 const Nightmare = require('nightmare');
-const nightmare = Nightmare({ show: true });
-
+const nightmare = Nightmare({ show: false });
+const fs = require('fs');
 
 const start_url = 'https://www.depop.com/__pobrecita__';
 const blurb_selector = '.css-1ski12 span span';
@@ -21,6 +21,10 @@ const getBlurb = async id => {
 	} catch(e) {
 		console.log(e);
 	}
+
+	let full_data = [];
+
+	product_count = 2;
 
 	for(let i = 1; i <= product_count; i++) {
 		try {
@@ -51,11 +55,9 @@ const getBlurb = async id => {
 							images: images}
 				})
 				.then();
-			// let result_refined = result.map(line => line.replace('\n','').trim()).filter(line => line !== '');
-			console.log(result);
+				full_data.push(result);
 		} catch(e) {
 			console.log(e);
-			i--;
 		}
 
 		try {
@@ -67,26 +69,23 @@ const getBlurb = async id => {
 			console.log(e);
 		}
 	}
+
+	return JSON.stringify(full_data);
 };
 
 getBlurb(12)
-	.then(a => console.log(a))
+	.then(a => {
+		fs.writeFile("./scrape_data.json", a, function(err) {
+			if(err) {
+				return console.log(err);
+			}
+
+			console.log("file saved");
+		});
+	})
 	.catch(e => console.error(e));
 
-// nightmare
-// 	.goto(start_url)
-// 	.click('.css-1hphgbj')
-// 	.exists('[data-css-rabfxd]')
-// 	.click('[data-css-rabfxd]')
-// 	// .evaluate(() => document.querySelector('.css-1hphgbj'))
-// 	// .evaluate(() => document.querySelector('.css-2ybrgo'))
-// 	.wait('.css-1ski12 span span')
-// 	// .select('.css-1ski12 span span')
-// 	.evaluate(blurb_selector => {
-// 		return document.querySelector(blurb_selector).innerText
-// 	}, blurb_selector)
-// 	.end()
-// 	.then(console.log)
-// 	.catch(error => {
-// 		console.log(error)
-// 	})
+
+
+
+
