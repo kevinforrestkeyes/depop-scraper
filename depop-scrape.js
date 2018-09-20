@@ -47,7 +47,7 @@ const scrapeStore = async (username) => {
 	console.log(product_count+' products to scrape');
 	let full_data = [];
 
-	for(let i = 1; i <= product_count; i++) {
+	for(let i = 0; i <= product_count; i++) {
 		console.log('scraping product '+i+'/'+product_count);
 		if(i > 24) {
 			try {
@@ -109,6 +109,9 @@ const scrapeStore = async (username) => {
 			console.log(e);
 		}
 	}
+
+	await nightmare
+		.end();
 	return JSON.stringify(full_data);
 };
 
