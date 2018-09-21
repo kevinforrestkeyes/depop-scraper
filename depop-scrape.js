@@ -1,9 +1,10 @@
+'use strict';
 const Nightmare = require('nightmare');
 const nightmare = Nightmare({ show: false });
 const fs = require('fs');
 const vo = require('vo');
 
-const username = '__pobrecita__';
+const username = process.argv[2];
 const blurb_selector = '.css-1ski12 span span';
 
 const scrapeStore = async (username) => {
