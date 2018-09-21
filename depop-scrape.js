@@ -124,7 +124,7 @@ const scrapeStore = async (username) => {
 
 	await nightmare
 		.end();
-	return JSON.stringify(full_data);
+	return JSON.stringify(full_data, null, 4);
 };
 
 scrapeStore(username)
