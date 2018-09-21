@@ -1,6 +1,6 @@
 'use strict';
 const Nightmare = require('nightmare');
-const nightmare = Nightmare({ show: false });
+const nightmare = Nightmare({ show: false, waitTimeout: 5000, executionTimeout: 1000 });
 const fs = require('fs');
 const vo = require('vo');
 
@@ -48,7 +48,7 @@ const scrapeStore = async (username) => {
 	console.log(product_count+' products to scrape');
 	let full_data = [];
 
-	for(let i = 0; i <= product_count; i++) {
+	for(let i = 1; i <= product_count; i++) {
 		console.log('scraping product '+i+'/'+product_count);
 		if(i > 24) {
 			try {
@@ -68,10 +68,20 @@ const scrapeStore = async (username) => {
 			}
 		}
 
+		let is_sold = false;
+
+		try {
+			is_sold = await nightmare
+				.exists('li:nth-child('+i+') [data-css-rabfxd] [data-css-1k18vdk] span')
+				.then();
+		} catch(e) {
+			console.log(e);
+		}
+
 		try {
 			const result = await nightmare
 			.click('li:nth-child('+i+') [data-css-rabfxd]')
-			.wait('.css-iz6ix8 [data-css-gdcf1g] img')
+			.wait('.css-c8e770 [data-css-gdcf1g] img')
 			.evaluate(() => {
 				let blurb = [];
 				let fields = [];
@@ -88,14 +98,15 @@ const scrapeStore = async (username) => {
 				.map(el => el.innerText);
 				values = [...document.querySelectorAll('.css-un4s3n.css-syjz65')]
 				.map(el => el.innerText);
-				images = [...document.querySelectorAll('.css-iz6ix8 [data-css-gdcf1g] img')]
-				.map(el => el.src);
+				images = [...document.querySelectorAll('.css-c8e770 [data-css-gdcf1g] img')]
+					.map(el => el.src);
 				return {blurb: blurb.map(line => line.replace('\n','').trim()).filter(line => line !== ''),
 				fields: fields,
 				values: values,
 				images: images}
 			})
 			.then();
+			result.is_sold = is_sold;
 			full_data.push(result);
 		} catch(e) {
 			console.log(e);
