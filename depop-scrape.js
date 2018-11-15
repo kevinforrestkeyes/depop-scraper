@@ -88,6 +88,7 @@ const scrapeStore = async (username, show_window) => {
 				let fields = [];
 				let values = [];
 				let images = [];
+				let size = "";
 				if(document.querySelectorAll('.css-1ski12 span span').length > 0) {
 					blurb = [...document.querySelectorAll('.css-1ski12 span span')]
 					.map(el => el.innerText);
@@ -95,12 +96,18 @@ const scrapeStore = async (username, show_window) => {
 					blurb = [...document.querySelectorAll('.css-1ski12 span')]
 					.map(el => el.innerText);
 				}
-				fields = [...document.querySelectorAll('.css-un4s3n span')]
+				fields = [...document.querySelectorAll('div table tr td span')]
 				.map(el => el.innerText);
-				values = [...document.querySelectorAll('.css-un4s3n.css-syjz65')]
+				values = [...document.querySelectorAll('div table tr td:last-child')]
 				.map(el => el.innerText);
 				images = [...document.querySelectorAll('.css-c8e770 [data-css-gdcf1g] img')]
 					.map(el => el.src);
+				size_element = document.querySelector('.css-pyswvh span:last-child');
+				if(size_element !== null) {
+					size = size_element.innerText;
+					fields.push("size");
+					values.push(size);
+				}
 				date_added = Date();
 				return {blurb: blurb.map(line => line.replace('\n','').trim()).filter(line => line !== ''),
 				fields: fields,
