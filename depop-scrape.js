@@ -5,12 +5,13 @@ const fs = require('fs');
 const vo = require('vo');
 
 const username = process.argv[2];
+const show_window = (process.argv[3] === 'true');
 const blurb_selector = '.css-1ski12 span span';
 
-const scrapeStore = async (username) => {
+const scrapeStore = async (username, show_window) => {
 	console.log('now scraping from '+username+'s store');
 	const start_url = "https://www.depop.com/"+username;
-	const nightmare = new Nightmare({ show: true });
+	const nightmare = new Nightmare({ show: show_window });
 	let product_count = '';
 
 	try {
@@ -129,7 +130,7 @@ const scrapeStore = async (username) => {
 	return JSON.stringify(full_data, null, 4);
 };
 
-scrapeStore(username)
+scrapeStore(username, show_window)
 .then(a => {
 	fs.writeFile("./scrape_data.json", a, function(err) {
 		if(err) {

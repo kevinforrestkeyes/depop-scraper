@@ -2,4 +2,4 @@
 for scraping product data from depop stores using nightmare js. must be using node v > 7
 writes resulting data to json
 
-to run: node --harmony depop-scrape.js \<username\>
+to run: node --harmony depop-scrape.js \<username\> \<show window true/false \>
