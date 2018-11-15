@@ -49,8 +49,8 @@ const scrapeStore = async (username, show_window) => {
 	console.log(product_count+' products to scrape');
 	let full_data = [];
 
-	for(let i = 1; i <= product_count; i++) {
-		console.log('scraping product '+i+'/'+product_count);
+	for(let i = product_count; i > 0; i--) {
+		console.log('scraping product '+(product_count-i+1)+'/'+product_count);
 		if(i > 24) {
 			try {
 				let target_visible = false;
