@@ -11,7 +11,7 @@ const blurb_selector = '.css-1ski12 span span';
 const scrapeStore = async (username, show_window) => {
 	console.log('now scraping from '+username+'s store');
 	const start_url = "https://www.depop.com/"+username;
-	const nightmare = new Nightmare({ show: show_window });
+	const nightmare = new Nightmare({ show: show_window, waitTimeout: 5000, executionTimeout: 5000 });
 	let product_count = '';
 
 	try {
