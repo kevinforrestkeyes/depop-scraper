@@ -100,10 +100,12 @@ const scrapeStore = async (username) => {
 				.map(el => el.innerText);
 				images = [...document.querySelectorAll('.css-c8e770 [data-css-gdcf1g] img')]
 					.map(el => el.src);
+				date_added = Date();
 				return {blurb: blurb.map(line => line.replace('\n','').trim()).filter(line => line !== ''),
 				fields: fields,
 				values: values,
-				images: images}
+				images: images,
+				date_added: date_added}
 			})
 			.then();
 			result.is_sold = is_sold;
