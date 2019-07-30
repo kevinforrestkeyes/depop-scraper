@@ -49,7 +49,7 @@ const scrapeStore = async (username, show_window) => {
 	console.log(product_count+' products to scrape');
 	let full_data = [];
 
-	for(let i = product_count; i > 0; i--) {
+	for(let i = products.length; i > 0; i--) {
 		console.log('scraping product '+(product_count-i+1)+'/'+product_count);
 		if(i > 24) {
 			try {
@@ -82,38 +82,34 @@ const scrapeStore = async (username, show_window) => {
 		try {
 			const result = await nightmare
 			.click('li:nth-child('+i+') [data-css-rabfxd]')
-			.wait('.css-c8e770 [data-css-gdcf1g] img')
+			.wait('.Container-sc-4caz4y-0 .ligytZ img')
 			.evaluate(() => {
 				let blurb = [];
 				let fields = [];
 				let values = [];
 				let images = [];
 				let size = "";
-				if(document.querySelectorAll('.css-1ski12 span span').length > 0) {
-					blurb = [...document.querySelectorAll('.css-1ski12 span span')]
+				if(document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8').length > 0) {
+					blurb = [...document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8')]
 					.map(el => el.innerText);
 				} else {
 					blurb = [...document.querySelectorAll('.css-1ski12 span')]
 					.map(el => el.innerText);
 				}
-				fields = [...document.querySelectorAll('div table tr td span')]
+				fields = [...document.querySelectorAll('div table tr th')]
 				.map(el => el.innerText);
-				values = [...document.querySelectorAll('div table tr td:last-child')]
+				values = [...document.querySelectorAll('div table tr td')]
 				.map(el => el.innerText);
-				images = [...document.querySelectorAll('.css-c8e770 [data-css-gdcf1g] img')]
+				images = [...document.querySelectorAll('.ligytZ img')]
+					.filter(el => el.src.length)
 					.map(el => el.src);
-				size_element = document.querySelector('.css-pyswvh span:last-child');
-				if(size_element !== null) {
-					size = size_element.innerText;
-					fields.push("size");
-					values.push(size);
-				}
 				date_added = Date();
+				const extraData = {};
+				Object.keys(fields).forEach(index => extraData[fields[index]] = values[index]);
 				return {blurb: blurb.map(line => line.replace('\n','').trim()).filter(line => line !== ''),
-				fields: fields,
-				values: values,
-				images: images,
-				date_added: date_added}
+				extraData,
+				images,
+				date_added}
 			})
 			.then();
 			result.is_sold = is_sold;
