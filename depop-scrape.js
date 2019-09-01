@@ -49,8 +49,6 @@ const scrapeStore = async (username, show_window) => {
 	console.log(`${product_count} products to scrape`);
 	let full_data = [];
 
-	product_count = 6;
-
 	for(let i = 0; i < product_count; i++) {
 		console.log(`scraping product ${i+1}/${product_count}`);
 		if(i > 24) {
