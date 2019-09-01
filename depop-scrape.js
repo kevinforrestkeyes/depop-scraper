@@ -49,6 +49,8 @@ const scrapeStore = async (username, show_window) => {
 	console.log(`${product_count} products to scrape`);
 	let full_data = [];
 
+	product_count = 6;
+
 	for(let i = 0; i < product_count; i++) {
 		console.log(`scraping product ${i+1}/${product_count}`);
 		if(i > 24) {
@@ -84,9 +86,22 @@ const scrapeStore = async (username, show_window) => {
 
 		try {
 			if (!is_sold) {
-				const result = await nightmare
+				await nightmare
 				.click(`li:nth-child(${i+1}) [data-css-rabfxd]`)
 				.wait('.ligytZ img')
+				.then();
+
+				previousHeight, currentHeight = 0;
+				while(previousHeight !== currentHeight) {
+					previousHeight = currentHeight;
+					var currentHeight = await nightmare.evaluate(function() {
+						return document.body.scrollHeight;
+					});
+					await nightmare.scrollTo(previousHeight+500, 0)
+					.wait(1000);
+				}
+
+				const result = await nightmare
 				.evaluate(() => {
 					let blurb = [];
 					let fields = [];
