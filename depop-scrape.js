@@ -49,7 +49,7 @@ const scrapeStore = async (username, show_window) => {
 	console.log(product_count+' products to scrape');
 	let full_data = [];
 
-	for(let i = products.length; i > 0; i--) {
+	for(let i = product_count; i > 0; i--) {
 		console.log('scraping product '+(product_count-i+1)+'/'+product_count);
 		if(i > 24) {
 			try {
@@ -82,7 +82,7 @@ const scrapeStore = async (username, show_window) => {
 		try {
 			const result = await nightmare
 			.click('li:nth-child('+i+') [data-css-rabfxd]')
-			.wait('.Container-sc-4caz4y-0 .ligytZ img')
+			.wait('.styles__Mobile-uwktmu-1 .ligytZ img')
 			.evaluate(() => {
 				let blurb = [];
 				let fields = [];
@@ -100,7 +100,8 @@ const scrapeStore = async (username, show_window) => {
 				.map(el => el.innerText);
 				values = [...document.querySelectorAll('div table tr td')]
 				.map(el => el.innerText);
-				images = [...document.querySelectorAll('.ligytZ img')]
+				console.log(document.querySelectorAll('.styles__Mobile-uwktmu-1 .ligytZ img'));
+				images = [...document.querySelectorAll('.styles__Mobile-uwktmu-1 .ligytZ img')]
 					.filter(el => el.src.length)
 					.map(el => el.src);
 				date_added = Date();
