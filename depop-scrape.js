@@ -9,9 +9,9 @@ const show_window = (process.argv[3] === 'true');
 const blurb_selector = '.css-1ski12 span span';
 
 const scrapeStore = async (username, show_window) => {
-	console.log('now scraping from '+username+'s store');
-	const start_url = "https://www.depop.com/"+username;
-	const nightmare = new Nightmare({ show: show_window, waitTimeout: 5000, executionTimeout: 5000 });
+	console.log(`now scraping from ${username}'s store`);
+	const start_url = `https://www.depop.com/${username}`;
+	const nightmare = new Nightmare({ show: show_window, height: 1024, width: 1024, waitTimeout: 5000, executionTimeout: 5000 });
 	let product_count = '';
 
 	try {
@@ -46,11 +46,11 @@ const scrapeStore = async (username, show_window) => {
 		console.log(e);
 	}
 
-	console.log(product_count+' products to scrape');
+	console.log(`${product_count} products to scrape`);
 	let full_data = [];
 
-	for(let i = product_count; i > 0; i--) {
-		console.log('scraping product '+(product_count-i+1)+'/'+product_count);
+	for(let i = 0; i < product_count; i++) {
+		console.log(`scraping product ${i+1}/${product_count}`);
 		if(i > 24) {
 			try {
 				let target_visible = false;
@@ -60,7 +60,7 @@ const scrapeStore = async (username, show_window) => {
 						return document.body.scrollHeight;
 					})
 					target_visible = await nightmare
-						.exists('li:nth-child('+i+') [data-css-rabfxd]');
+						.exists(`li:nth-child(${i+1}) [data-css-rabfxd]`);
 					await nightmare.scrollTo(currentHeight, 0)
 					.wait(1000);
 				}
@@ -73,48 +73,52 @@ const scrapeStore = async (username, show_window) => {
 
 		try {
 			is_sold = await nightmare
-				.exists('li:nth-child('+i+') [data-css-rabfxd] [data-css-1k18vdk] span')
+				.exists(`li:nth-child(${i+1}) [data-css-rabfxd] [data-css-1k18vdk] span`)
 				.then();
+			console.log(is_sold);
 		} catch(e) {
 			console.log(e);
 		}
 
+		
+
 		try {
-			const result = await nightmare
-			.click('li:nth-child('+i+') [data-css-rabfxd]')
-			.wait('.styles__Mobile-uwktmu-1 .ligytZ img')
-			.evaluate(() => {
-				let blurb = [];
-				let fields = [];
-				let values = [];
-				let images = [];
-				let size = "";
-				if(document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8').length > 0) {
-					blurb = [...document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8')]
+			if (!is_sold) {
+				const result = await nightmare
+				.click(`li:nth-child(${i+1}) [data-css-rabfxd]`)
+				.wait('.ligytZ img')
+				.evaluate(() => {
+					let blurb = [];
+					let fields = [];
+					let values = [];
+					let images = [];
+					let size = "";
+					if(document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8').length > 0) {
+						blurb = [...document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8')]
+						.map(el => el.innerText);
+					} else {
+						blurb = [...document.querySelectorAll('.css-1ski12 span')]
+						.map(el => el.innerText);
+					}
+					fields = [...document.querySelectorAll('div table tr th')]
 					.map(el => el.innerText);
-				} else {
-					blurb = [...document.querySelectorAll('.css-1ski12 span')]
+					values = [...document.querySelectorAll('div table tr td')]
 					.map(el => el.innerText);
-				}
-				fields = [...document.querySelectorAll('div table tr th')]
-				.map(el => el.innerText);
-				values = [...document.querySelectorAll('div table tr td')]
-				.map(el => el.innerText);
-				console.log(document.querySelectorAll('.styles__Mobile-uwktmu-1 .ligytZ img'));
-				images = [...document.querySelectorAll('.styles__Mobile-uwktmu-1 .ligytZ img')]
-					.filter(el => el.src.length)
-					.map(el => el.src);
-				date_added = Date();
-				const extraData = {};
-				Object.keys(fields).forEach(index => extraData[fields[index]] = values[index]);
-				return {blurb: blurb.map(line => line.replace('\n','').trim()).filter(line => line !== ''),
-				extraData,
-				images,
-				date_added}
-			})
-			.then();
-			result.is_sold = is_sold;
-			full_data.push(result);
+					images = [...document.querySelectorAll('.ligytZ img')]
+						.filter(el => el.src.length)
+						.map(el => el.src);
+					date_added = Date();
+					const extraData = {};
+					Object.keys(fields).forEach(index => extraData[fields[index]] = values[index]);
+					return {blurb: blurb.map(line => line.replace('\n','').trim()).filter(line => line !== ''),
+					extraData,
+					images,
+					date_added}
+				})
+				.then();
+				result.is_sold = is_sold;
+				full_data.push(result);
+			}
 		} catch(e) {
 			console.log(e);
 		}
