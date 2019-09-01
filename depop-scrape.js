@@ -53,7 +53,8 @@ const scrapeStore = async (username, show_window) => {
 		console.log(`scraping product ${i+1}/${product_count}`);
 		if(i > 24) {
 			try {
-				let target_visible = false;
+				let target_visible = await nightmare
+					.exists(`li:nth-child(${i+1}) [data-css-rabfxd]`);
 				var currentHeight = 0;
 				while(!target_visible) {
 					var currentHeight = await nightmare.evaluate(function() {
@@ -75,7 +76,6 @@ const scrapeStore = async (username, show_window) => {
 			is_sold = await nightmare
 				.exists(`li:nth-child(${i+1}) [data-css-rabfxd] [data-css-1k18vdk] span`)
 				.then();
-			console.log(is_sold);
 		} catch(e) {
 			console.log(e);
 		}
@@ -124,10 +124,12 @@ const scrapeStore = async (username, show_window) => {
 		}
 
 		try {
-			await nightmare
-			.goto(start_url)
-			.wait('[data-css-rabfxd]')
-			.then();
+			if (!is_sold) {
+				await nightmare
+				.goto(start_url)
+				.wait('[data-css-rabfxd]')
+				.then();
+			}
 		} catch(e) {
 			console.log(e);
 		}
