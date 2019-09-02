@@ -95,19 +95,24 @@ const checkIfProductSold = async (nightmare, targetIndex) => {
 const scrapeProductData = async (nightmare) => {
 	return await nightmare
 	.evaluate(() => {
+		const blurbSelectorPrimary = '.styles__DescriptionContainer-uwktmu-8';
+		const blurbSelectorSecondary = '.css-1ski12 span';
+		const fieldsSelector = 'div table tr th'; 
+		const valuesSelector = 'div table tr td';
+		const imagesSelector = '.ligytZ img'; 
 		let blurb, fields, values, images;
-		if (document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8').length > 0) {
-			blurb = [...document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8')]
+		if (document.querySelectorAll(blurbSelectorPrimary).length > 0) {
+			blurb = [...document.querySelectorAll(blurbSelectorPrimary)]
 				.map(el => el.innerText);
 		} else {
-			blurb = [...document.querySelectorAll('.css-1ski12 span')]
+			blurb = [...document.querySelectorAll(blurbSelectorSecondary)]
 				.map(el => el.innerText);
 		}
-		fields = [...document.querySelectorAll('div table tr th')]
+		fields = [...document.querySelectorAll(fieldsSelector)]
 			.map(el => el.innerText);
-		values = [...document.querySelectorAll('div table tr td')]
+		values = [...document.querySelectorAll(valuesSelector)]
 			.map(el => el.innerText);
-		images = [...document.querySelectorAll('.ligytZ img')]
+		images = [...document.querySelectorAll(imagesSelector)]
 			.filter(el => el.src.length)
 			.map(el => el.src);
 		date_added = Date();
