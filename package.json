@@ -2,9 +2,9 @@
   "name": "depop-scraper",
   "version": "1.0.0",
   "description": "for scraping product data from depop stores using nightmare js. must be using node v > 7 writes resulting data to json",
-  "main": "depop-scrape.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "scrape": "node --harmony index.js $1 $2"
   },
   "repository": {
     "type": "git",
