@@ -8,161 +8,187 @@ const username = process.argv[2];
 const show_window = (process.argv[3] === 'true');
 const blurb_selector = '.css-1ski12 span span';
 
-const scrapeStore = async (username, show_window) => {
-	console.log(`now scraping from ${username}'s store`);
-	const start_url = `https://www.depop.com/${username}`;
-	const nightmare = new Nightmare({ show: show_window, height: 1024, width: 1024, waitTimeout: 5000, executionTimeout: 5000 });
-	let product_count = '';
-
+const loadProfile = async (nightmare, startURL) => {
 	try {
 		await nightmare
-			.goto(start_url)
+			.goto(startURL)
 			.wait('[data-css-rabfxd]');
-	} catch(e) {
+	} catch (e) {
 		console.log(e);
 	}
+}
 
+const loadProduct = async (nightmare, targetIndex) => {
+	return await nightmare
+		.click(`li:nth-child(${targetIndex + 1}) [data-css-rabfxd]`)
+		.wait('.ligytZ img')
+		.then();
+}
+
+const scrollToBottom = async (nightmare, mode) => {
 	try {
-		var previousHeight, currentHeight = 0;
-		while(previousHeight !== currentHeight) {
+		let previousHeight, currentHeight = 0;
+		while (previousHeight !== currentHeight) {
 			previousHeight = currentHeight;
-			var currentHeight = await nightmare.evaluate(function() {
+			currentHeight = await nightmare.evaluate(function () {
 				return document.body.scrollHeight;
 			});
-			await nightmare.scrollTo(currentHeight, 0)
-			.wait(1000);
+			if (mode === 'profile') {
+				await nightmare.scrollTo(currentHeight, 0)
+					.wait(1000);
+			} else if (mode === 'product') {
+				await nightmare.scrollTo(previousHeight + 500, 0)
+					.wait(1000);
+			}
 		}
-	} catch(e) {
+	} catch (e) {
 		console.log(e);
 	}
+}
 
+const scrollToTarget = async (nightmare, targetIndex) => {
 	try {
-		product_count = await nightmare
-		.evaluate(() => {
-			return [...document.querySelectorAll('[data-css-rabfxd]')].length;
-		})
-		.then();
-	} catch(e) {
+		let targetVisible = await nightmare
+			.exists(`li:nth-child(${targetIndex + 1}) [data-css-rabfxd]`);
+		let currentHeight = 0;
+		while (!targetVisible) {
+			currentHeight = await nightmare.evaluate(function () {
+				return document.body.scrollHeight;
+			})
+			targetVisible = await nightmare
+				.exists(`li:nth-child(${targetIndex + 1}) [data-css-rabfxd]`);
+			await nightmare.scrollTo(currentHeight, 0)
+				.wait(1000);
+		}
+		return;
+	} catch (e) {
 		console.log(e);
 	}
+}
 
-	console.log(`${product_count} products to scrape`);
-	let full_data = [];
+const countInstancesOfSelector = async (nightmare, selector) => {
+	try {
+		return await nightmare
+			.evaluate(selector => {
+				return document.querySelectorAll(selector).length;
+			}, selector) // <-- that's how you pass parameters from Node scope to browser scope
+			.then(count => {
+				return count;
+			})
+	} catch (e) {
+		console.log(e);
+	}
+}
 
-	for(let i = 0; i < product_count; i++) {
-		console.log(`scraping product ${i+1}/${product_count}`);
-		if(i > 24) {
-			try {
-				let target_visible = await nightmare
-					.exists(`li:nth-child(${i+1}) [data-css-rabfxd]`);
-				var currentHeight = 0;
-				while(!target_visible) {
-					var currentHeight = await nightmare.evaluate(function() {
-						return document.body.scrollHeight;
-					})
-					target_visible = await nightmare
-						.exists(`li:nth-child(${i+1}) [data-css-rabfxd]`);
-					await nightmare.scrollTo(currentHeight, 0)
-					.wait(1000);
-				}
-			} catch(e) {
-				console.log(e);
-			}
+const getProductCount = async (nightmare) => {
+	return await countInstancesOfSelector(nightmare, '[data-css-rabfxd]');
+}
+
+const checkIfProductSold = async (nightmare, targetIndex) => {
+	try {
+		return await nightmare
+			.exists(`li:nth-child(${targetIndex + 1}) [data-css-rabfxd] [data-css-1k18vdk] span`)
+			.then();
+	} catch (e) {
+		console.log(e);
+	}
+}
+
+const scrapeProductData = async (nightmare) => {
+	return await nightmare
+	.evaluate(() => {
+		let blurb, fields, values, images;
+		if (document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8').length > 0) {
+			blurb = [...document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8')]
+				.map(el => el.innerText);
+		} else {
+			blurb = [...document.querySelectorAll('.css-1ski12 span')]
+				.map(el => el.innerText);
 		}
+		fields = [...document.querySelectorAll('div table tr th')]
+			.map(el => el.innerText);
+		values = [...document.querySelectorAll('div table tr td')]
+			.map(el => el.innerText);
+		images = [...document.querySelectorAll('.ligytZ img')]
+			.filter(el => el.src.length)
+			.map(el => el.src);
+		date_added = Date();
+		const extraData = {};
+		Object.keys(fields).forEach(index => extraData[fields[index]] = values[index]);
+		return {
+			blurb: blurb.map(line => line.replace('\n', '').trim()).filter(line => line !== ''),
+			extraData,
+			images,
+			date_added
+		}
+	})
+	.then(data => {
+		return data;
+	});
+}
 
-		let is_sold = false;
+const scrapeProducts = async (nightmare, startURL, productCount) => {
+	const fullData = [];
+
+	for (let i = 15; i < productCount; i++) {
+		console.log(`scraping product ${i + 1}/${productCount}`);
+		await scrollToTarget(nightmare, i);
+
+		let isSold = await checkIfProductSold(nightmare, i);
 
 		try {
-			is_sold = await nightmare
-				.exists(`li:nth-child(${i+1}) [data-css-rabfxd] [data-css-1k18vdk] span`)
-				.then();
-		} catch(e) {
-			console.log(e);
-		}
+			if (!isSold) {
+				await loadProduct(nightmare, i);
+				await scrollToBottom(nightmare, 'product');
 
-		
+				const result = await scrapeProductData(nightmare);
+				result.isSold = isSold;
+				fullData.push(result);
 
-		try {
-			if (!is_sold) {
-				await nightmare
-				.click(`li:nth-child(${i+1}) [data-css-rabfxd]`)
-				.wait('.ligytZ img')
-				.then();
-
-				previousHeight, currentHeight = 0;
-				while(previousHeight !== currentHeight) {
-					previousHeight = currentHeight;
-					var currentHeight = await nightmare.evaluate(function() {
-						return document.body.scrollHeight;
-					});
-					await nightmare.scrollTo(previousHeight+500, 0)
-					.wait(1000);
-				}
-
-				const result = await nightmare
-				.evaluate(() => {
-					let blurb = [];
-					let fields = [];
-					let values = [];
-					let images = [];
-					let size = "";
-					if(document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8').length > 0) {
-						blurb = [...document.querySelectorAll('.styles__DescriptionContainer-uwktmu-8')]
-						.map(el => el.innerText);
-					} else {
-						blurb = [...document.querySelectorAll('.css-1ski12 span')]
-						.map(el => el.innerText);
-					}
-					fields = [...document.querySelectorAll('div table tr th')]
-					.map(el => el.innerText);
-					values = [...document.querySelectorAll('div table tr td')]
-					.map(el => el.innerText);
-					images = [...document.querySelectorAll('.ligytZ img')]
-						.filter(el => el.src.length)
-						.map(el => el.src);
-					date_added = Date();
-					const extraData = {};
-					Object.keys(fields).forEach(index => extraData[fields[index]] = values[index]);
-					return {blurb: blurb.map(line => line.replace('\n','').trim()).filter(line => line !== ''),
-					extraData,
-					images,
-					date_added}
-				})
-				.then();
-				result.is_sold = is_sold;
-				full_data.push(result);
+				await loadProfile(nightmare, startURL);
 			}
-		} catch(e) {
-			console.log(e);
-		}
-
-		try {
-			if (!is_sold) {
-				await nightmare
-				.goto(start_url)
-				.wait('[data-css-rabfxd]')
-				.then();
-			}
-		} catch(e) {
+		} catch (e) {
 			console.log(e);
 		}
 	}
+
+	return fullData;
+}
+
+const scrapeStore = async (username, show_window) => {
+	console.log(`now scraping from ${username}'s store`);
+	const startURL = `https://www.depop.com/${username}`;
+	const nightmare = new Nightmare({ show: show_window, height: 1024, width: 1024, waitTimeout: 5000, executionTimeout: 5000 });
+
+	await loadProfile(nightmare, startURL);
+	await scrollToBottom(nightmare, 'profile');
+	const productCount = await getProductCount(nightmare);
+
+	console.log(`${productCount} products to scrape`);
+
+	const fullData = await scrapeProducts(nightmare, startURL, productCount);
 
 	await nightmare
 		.end();
-	return JSON.stringify(full_data, null, 4);
+	return JSON.stringify(fullData, null, 4);
 };
 
-scrapeStore(username, show_window)
-.then(a => {
-	fs.writeFile("./scrape_data.json", a, function(err) {
-		if(err) {
+const writeDataToFile = async (data) => {
+	fs.writeFile("./output.json", data, function (err) {
+		if (err) {
 			return console.log(err);
 		}
 		return 'file saved';
 	});
-})
-.catch(e => console.error(e));
+}
+
+const main = async (username, show_window) => {
+	const productData = await scrapeStore(username, show_window);
+	writeDataToFile(productData);
+}
+
+main(username, show_window)
+	.catch(e => console.error(e));
 
 
 
