@@ -1,12 +1,10 @@
 'use strict';
 const Nightmare = require('nightmare');
-const nightmare = Nightmare({ show: false, waitTimeout: 5000, executionTimeout: 1000 });
 const fs = require('fs');
 const vo = require('vo');
 
 const username = process.argv[2];
 const show_window = (process.argv[3] === 'true');
-const blurb_selector = '.css-1ski12 span span';
 
 const loadProfile = async (nightmare, startURL) => {
 	try {
@@ -130,7 +128,7 @@ const scrapeProductData = async (nightmare) => {
 const scrapeProducts = async (nightmare, startURL, productCount) => {
 	const fullData = [];
 
-	for (let i = 15; i < productCount; i++) {
+	for (let i = 0; i < productCount; i++) {
 		console.log(`scraping product ${i + 1}/${productCount}`);
 		await scrollToTarget(nightmare, i);
 
